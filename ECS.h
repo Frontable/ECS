@@ -39,6 +39,12 @@ namespace FrostEngine
             m_entityManager.SetSignature(_entity, signature);   
         }
 
+        template<typename T>
+        T& GetComponent(Entity _entity)
+        {
+            return m_componentManager.GetComponent<T>(_entity);
+        }
+
 
 
         private:

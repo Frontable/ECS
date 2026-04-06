@@ -94,6 +94,12 @@ namespace FrostEngine
             return m_componentID.at(type);
         }
 
+        template<typename T>
+        T& GetComponent(Entity _entity)
+        {
+            return GetComponentArray<T>()->GetComponent(_entity);
+        }
+
     private:
         template <typename T>
         ComponentArray<T> *GetComponentArray()
