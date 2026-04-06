@@ -82,7 +82,7 @@ namespace FrostEngine
             }
         }
 
-    private:
+    private:    
         Entity m_currentEntity{};
         std::array<Signature, MAX_ENTITIES> m_entities{};
         std::array<bool, MAX_ENTITIES> m_aliveEntities{};
