@@ -1,5 +1,7 @@
 #pragma once
-#include "Math.h"
+#include "FrostMath.h"
+#define SOL_ALL_SAFETIES_ON 1
+#include <sol/sol.hpp>
 
 struct Transform2D
 {
@@ -21,4 +23,11 @@ struct RigidBody2D
     RigidBody2D() = default;
     RigidBody2D(vec2 _vel):velocity(_vel){}
     vec2 velocity;
+};
+
+
+struct ScriptComponent
+{
+    sol::protected_function update{ sol::lua_nil }, render{ sol::lua:nill }
+
 };

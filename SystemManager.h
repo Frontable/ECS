@@ -1,9 +1,9 @@
 #pragma once
-#include "ECS.h"
-#include "EntityManager.h"
-#include "Components.h"
+#include "ECS/ECS.h"
+#include "ECS/EntityManager.h"
+#include "ECS/Components.h"
 #include <set>
-#include "draw.h"
+#include "ECS/draw.h"
 
 
 class System
@@ -70,3 +70,27 @@ public:
         }
     }
 };
+
+class ScriptingSystem
+{
+    public:
+    ScriptingSystem(ECS &_ecs)
+    :m_ecs{_ecs}, m_MainLoaded{false}
+    {
+
+    }
+    ~ScriptingSystem() = default;
+    bool LoadMainScript(sol::state &lua)
+    {
+
+
+        return false;
+    }
+
+    private:
+    ECS& m_ecs;
+    bool m_MainLoaded;
+
+    void update();
+    void render();
+}

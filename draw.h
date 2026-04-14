@@ -1,7 +1,7 @@
 #pragma once
 #include "Math.h"
 #include "glad/glad.h"
-#include "Shader.h"
+#include "Rendering/Essentials/Shader.h"
 
 
 class Draw
