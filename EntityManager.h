@@ -4,6 +4,7 @@
 #include <queue>
 #include <array>
 #include <iostream>
+#include <stdexcept>
 
 using Entity = std::uint32_t;
 using ComponentType = std::uint8_t;
@@ -17,8 +18,8 @@ namespace FrostEngine
     {
     public:
         EntityManager() = default;
-        // static constexpr Entity s_entity = 0;
-        static EntityManager &Get()
+
+        static EntityManager& Get()
         {
             static EntityManager instance;
             return instance;
@@ -27,22 +28,24 @@ namespace FrostEngine
         Entity CreateEntity()
         {
             Entity entity;
-            if (m_currentEntity >= MAX_ENTITIES)
+            if (m_currentEntity >= MAX_ENTITIES && m_availableEntities.empty())
             {
-                throw std::runtime_error("Maximum numbers of entities reached");
+                throw std::runtime_error("Maximum number of entities reached");
             }
+
             if (!m_availableEntities.empty())
             {
                 entity = m_availableEntities.front();
                 m_availableEntities.pop();
-                m_aliveEntities[entity] = true;
-                m_entities[entity] = Signature();
-                return entity;
             }
-            entity = m_currentEntity++;
+            else
+            {
+                entity = m_currentEntity++;
+            }
+
             m_aliveEntities[entity] = true;
             m_entities[entity] = Signature();
-            std::cout << "Created entity with id:" << entity << std::endl;
+            std::cout << "Created entity with id: " << entity << std::endl;
             return entity;
         }
 
@@ -50,39 +53,41 @@ namespace FrostEngine
         {
             if (_entity >= MAX_ENTITIES)
             {
-                std::cout << "Tried to delete an entity that is above the maximum number of entities" << std::endl;
+                std::cout << "Tried to delete invalid entity\n";
                 return;
             }
+
             if (m_aliveEntities[_entity])
             {
-                std::cout << "Deleting entity with id:" << _entity << std::endl;
+                std::cout << "Deleting entity with id: " << _entity << std::endl;
                 m_aliveEntities[_entity] = false;
                 m_entities[_entity] = Signature();
                 m_availableEntities.push(_entity);
             }
         }
 
-        void SetSignature(Entity _entity, Signature &signature)
+        void SetSignature(Entity _entity, const Signature& signature)
         {
-            if (m_aliveEntities[_entity] && _entity >= 0 && _entity <= MAX_ENTITIES)
+            if (_entity < MAX_ENTITIES && m_aliveEntities[_entity])
             {
                 m_entities[_entity] = signature;
                 return;
             }
-            std::cout << "Tryed to set a signature to Entity:" << _entity << "that does not exist" << std::endl;
-            throw std::runtime_error("Tryed to get a signature from Entity that does not exist");
-            return;
+
+            throw std::runtime_error("Tried to set signature on invalid entity");
         }
 
         Signature GetSignature(Entity _entity) const
         {
-            if (m_aliveEntities[_entity] && _entity >= 0 && _entity <= MAX_ENTITIES)
+            if (_entity < MAX_ENTITIES && m_aliveEntities[_entity])
             {
                 return m_entities[_entity];
             }
+
+            throw std::runtime_error("Tried to get signature from invalid entity");
         }
 
-    private:    
+    private:
         Entity m_currentEntity{};
         std::array<Signature, MAX_ENTITIES> m_entities{};
         std::array<bool, MAX_ENTITIES> m_aliveEntities{};

@@ -1,7 +1,7 @@
 #pragma once
 #include "FrostMath.h"
-#define SOL_ALL_SAFETIES_ON 1
-#include <sol/sol.hpp>
+// #define SOL_ALL_SAFETIES_ON 1
+// #include <sol/sol.hpp>
 
 struct Transform2D
 {
@@ -26,8 +26,8 @@ struct RigidBody2D
 };
 
 
-struct ScriptComponent
-{
-    sol::protected_function update{ sol::lua_nil }, render{ sol::lua:nill }
+// struct ScriptComponent
+// {
+//     sol::protected_function update{ sol::lua_nil }, render{ sol::lua:nill }
 
-};
+// };
