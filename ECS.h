@@ -2,18 +2,16 @@
 #include "EntityManager.h"
 #include "ComponentManager.h"
 
-
 namespace FrostEngine
 {
-
     class ECS
     {
-        public:
-        static ECS &Get()
+    public:
+        static ECS& Get()
         {
             static ECS instance;
             return instance;
-        }    
+        }
 
         Entity CreateEntity()
         {
@@ -22,6 +20,7 @@ namespace FrostEngine
 
         void DeleteEntity(Entity _entity)
         {
+            m_componentManager.EntityDestroyed(_entity);
             m_entityManager.DeleteEntity(_entity);
         }
 
@@ -30,22 +29,28 @@ namespace FrostEngine
         {
             m_componentManager.RegisterComponent<T>();
         }
+
         template<typename T>
         void AddComponent(Entity _entity, T _component)
         {
-            m_componentManager.AddComponent(_entity, _component);
+            m_componentManager.AddComponent<T>(_entity, _component);
+
             ComponentID id = m_componentManager.GetComponentID<T>();
-            Signature signature; signature.set(id);
-            m_entityManager.SetSignature(_entity, signature);   
+            Signature signature = m_entityManager.GetSignature(_entity);
+            signature.set(id);
+            m_entityManager.SetSignature(_entity, signature);
         }
 
+        template<typename T>
+        T& GetComponent(Entity _entity)
+        {
+            return m_componentManager.GetComponent<T>(_entity);
+        }
 
-
-        private:
-        ECS() { m_entityManager = EntityManager::Get(); }
+    private:
+        ECS() = default;
 
         EntityManager m_entityManager{};
         ComponentManager m_componentManager{};
-        //SystemManager m_systemManager;
     };
 }
