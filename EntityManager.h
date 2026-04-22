@@ -5,12 +5,8 @@
 #include <array>
 #include <iostream>
 #include <stdexcept>
+#include "types.h"
 
-using Entity = std::uint32_t;
-using ComponentType = std::uint8_t;
-constexpr ComponentType MAX_COMPONENTS = 32;
-constexpr Entity MAX_ENTITIES = 5000;
-using Signature = std::bitset<MAX_COMPONENTS>;
 
 namespace FrostEngine
 {

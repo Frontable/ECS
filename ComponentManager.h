@@ -18,14 +18,26 @@ namespace FrostEngine
     class ComponentArray : public IComponentArray
     {
     public:
+
+        // bool Has(Entity _entity)
+        // {
+        //     return m_Components.contains(_entity);
+        // }
         void AddComponent(Entity _entity, const T &_component)
         {
-            m_Components.emplace(_entity, _component);
+            if(m_Components.find(_entity) == m_Components.end())
+                m_Components.emplace(_entity, _component);
+            else
+                printf("Entity already has this component\n");
         }
 
         void RemoveComponent(Entity _entity)
         {
-            m_Components.erase(_entity);
+            if(m_Components.find(_entity) != m_Components.end())
+                m_Components.erase(_entity);        
+            else
+                printf("Entity does not hat this comp\n");
+
         }
 
         void EntityDestroyed(Entity _entity) override
