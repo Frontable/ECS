@@ -1,7 +1,6 @@
 #pragma once
 #include "FrostMath.h"
-#define SOL_ALL_SAFETIES_ON 1
-#include <sol/sol.hpp>
+#include "ECS/ECS.h"
 
 struct Transform2D
 {
@@ -19,18 +18,32 @@ struct Transform2D
 
 struct RigidBody2D
 {
-    RigidBody2D() = default;
-    RigidBody2D(vec2 _vel) : velocity(_vel) {}
-    vec2 velocity;
+    RigidBody2D():RigidBody2D(vec2(0,0), 0){};
+    RigidBody2D(vec2 _vel, float _gravity) : velocity(_vel), gravity(_gravity) {}
+    vec2 velocity{};
+    float gravity{};
+    bool falling{true};
 };
 
-struct ScriptComponent
+struct Rect
 {
-    std::string tableName;
-    sol::table instance{sol::lua_nil};
-    bool initialized = false;
+    float left = 0.0f;
+    float top = 0.0f;
+    float width = 0.0f;
+    float height = 0.0f;
 
-    ScriptComponent() = default;
-    ScriptComponent(const std::string &_tableName)
-        : tableName(_tableName) {}
+    float right() const { return left + width; }
+    float bottom() const { return top + height; }
 };
+
+struct BoxCollider
+{
+    Rect rect;
+};
+
+
+
+
+
+
+

@@ -1,8 +1,9 @@
 #pragma once
-#include "EntityManager.h"
 #include <unordered_map>
 #include <memory>
 #include <typeinfo>
+#include "EntityManager.h"
+#include "Logger/Logger.h"
 
 using ComponentID = std::uint8_t;
 namespace FrostEngine
@@ -18,17 +19,13 @@ namespace FrostEngine
     class ComponentArray : public IComponentArray
     {
     public:
-
-        // bool Has(Entity _entity)
-        // {
-        //     return m_Components.contains(_entity);
-        // }
+        
         void AddComponent(Entity _entity, const T &_component)
         {
             if(m_Components.find(_entity) == m_Components.end())
                 m_Components.emplace(_entity, _component);
             else
-                printf("Entity already has this component\n");
+                FROST_WARN("Tried to add component to entity that already has it");
         }
 
         void RemoveComponent(Entity _entity)
@@ -36,7 +33,7 @@ namespace FrostEngine
             if(m_Components.find(_entity) != m_Components.end())
                 m_Components.erase(_entity);        
             else
-                printf("Entity does not hat this comp\n");
+                FROST_ERROR("Tried to delete component from entity that does not have it");
 
         }
 
@@ -62,8 +59,7 @@ namespace FrostEngine
     class ComponentManager
     {
     public:
-        std::unordered_map<size_t, IComponentArray *> m_componentArrays;
-
+        
         template <typename T>
         bool RegisterComponent()
         {
@@ -71,7 +67,7 @@ namespace FrostEngine
             if (m_componentArrays.find(type) == m_componentArrays.end())
             {
                 m_componentID.emplace(type, currentID++);
-                m_componentArrays.emplace(type, new ComponentArray<T>{});
+                m_componentArrays.emplace(type, std::make_unique<ComponentArray<T>>());
                 return true;
             }
             printf("Components array alreay exists\n");
@@ -81,13 +77,13 @@ namespace FrostEngine
         template <typename T>
         void AddComponent(Entity _entity, T _component)
         {
-            GetComponentArray<T>()->AddComponent(_entity, _component);
+            GetComponentArray<T>().AddComponent(_entity, _component);
         }
 
         template <typename T>
         void RemoveComponent(Entity _entity)
         {
-            GetComponentArray<T>()->RemoveComponent(_entity);
+            GetComponentArray<T>().RemoveComponent(_entity);
         }
 
         void EntityDestroyed(Entity _entity)
@@ -109,17 +105,18 @@ namespace FrostEngine
         template<typename T>
         T& GetComponent(Entity _entity)
         {
-            return GetComponentArray<T>()->GetComponent(_entity);
+            return GetComponentArray<T>().GetComponent(_entity);
         }
 
     private:
         template <typename T>
-        ComponentArray<T> *GetComponentArray()
+        ComponentArray<T>& GetComponentArray()
         {
             size_t type = typeid(T).hash_code();
-            return static_cast<ComponentArray<T> *>(m_componentArrays.at(type));
+            return *static_cast<ComponentArray<T>*>(m_componentArrays.at(type).get());
         }
 
+        std::unordered_map<size_t, std::unique_ptr<IComponentArray>> m_componentArrays;
         std::unordered_map<size_t, ComponentID> m_componentID;
         ComponentID currentID{};
     };

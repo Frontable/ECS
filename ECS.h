@@ -3,31 +3,32 @@
 #include "ComponentManager.h"
 #include "SystemManager.h"
 #include "Components.h"
+#include "Logger/Logger.h"
+#include "SpriteBatchRenderer.h"
 
 namespace FrostEngine
 {
     class ECS
     {
     public:
-        ECS()
+
+        
+        
+        static ECS& get()
         {
-            m_componentManager.RegisterComponent<Transform2D>();
-            m_componentManager.RegisterComponent<ScriptComponent>();
-            m_componentManager.RegisterComponent<RigidBody2D>();
-            m_systemManager.RegisterSystem<Testsys>(this);
-
-            Signature testSignature;
-            testSignature.set(m_componentManager.GetComponentID<Transform2D>());
-            testSignature.set(m_componentManager.GetComponentID<RigidBody2D>());
-            m_systemManager.SetSignature<Testsys>(testSignature);
-
+            static ECS ecs;
+            return ecs;
         }
-
         ~ECS() = default;
 
         Entity CreateEntity()
         {
-            return m_entityManager.CreateEntity();
+            return m_entityManager.CreateEntity(FrostEngine::EntityManager::Type::NONE);
+        }
+
+        Entity CreateEntity(FrostEngine::EntityManager::Type _type)
+        {
+            return m_entityManager.CreateEntity(_type);
         }
 
         void DeleteEntity(Entity _entity)
@@ -53,6 +54,7 @@ namespace FrostEngine
             m_entityManager.SetSignature(_entity, signature);
 
             m_systemManager.EntitySignatureChange(_entity, signature);
+            //FROST_LOG("aM I GETTING ERE");
         }
 
         template <typename T>
@@ -73,19 +75,75 @@ namespace FrostEngine
             m_systemManager.RegisterSystem<T>();
         }
 
-        void testUpdate()
+        template<typename T>
+        T& getSystem()
         {
-            std::unordered_map<size_t, ISystem*> m_systems = m_systemManager.Get();
-
-            for(auto pair : m_systems)
-            {
-                pair.second->Update();
-            }
-
+            return m_systemManager.getSystem<T>();
         }
+
+        template<typename T>
+        size_t GetComponentID()
+        {
+            return m_componentManager.GetComponentID<T>();
+        }
+
+        template<typename T>
+        void SetSystemSignature(Signature _signature)
+        {
+            m_systemManager.SetSignature<T>(_signature);
+        }
+
+        enum class EventType
+        {
+            COLLISON = 0
+        };
+
+        struct EventMembers
+        {
+            EventMembers(Entity _triggered, Entity _trigger):triggered(_triggered), trigger(_trigger){}
+            Entity triggered;
+            Entity trigger;
+        };
+
+        void RegisterEvent(Entity _triggered, Entity _trigger)
+        {
+            m_eventMembers.emplace_back(_triggered, _trigger);
+        }
+        void fortest()
+        {
+            for(auto &pair : m_eventMembers)
+            {
+                auto &e1 = pair.triggered;
+                auto &e2 = pair.trigger;
+                //std::cout<<"Entity " << e1 << " collided with Entity" << e2 <<std::endl;
+            }
+            m_eventMembers.clear();
+        }
+
+        FrostEngine::EntityManager::Type GetType(Entity _entity)
+        {
+            return m_entityManager.GetType(_entity);
+        }
+
+        std::vector<EventMembers>& GetEvents()
+        {
+            return m_eventMembers;
+        }
+
+
+        
     private:
+        
+        ECS()
+        {
+            m_componentManager.RegisterComponent<Transform2D>();
+            m_componentManager.RegisterComponent<RigidBody2D>();
+            m_componentManager.RegisterComponent<Sprite>();
+            m_componentManager.RegisterComponent<BoxCollider>();
+        }
         EntityManager m_entityManager{};
         ComponentManager m_componentManager{};
         SystemManager m_systemManager{};
+        std::vector<EventMembers> m_eventMembers;
     };
 }

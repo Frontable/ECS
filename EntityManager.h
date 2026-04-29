@@ -1,32 +1,34 @@
 #pragma once
-#include <cstdint>
-#include <bitset>
 #include <queue>
 #include <array>
-#include <iostream>
-#include <stdexcept>
 #include "types.h"
-
+#include "Logger/Logger.h"
 
 namespace FrostEngine
 {
     class EntityManager
     {
     public:
+        enum class Type
+        {
+            NONE = 0,
+            PLAYER,
+            ENEMY,
+            WALL,
+        };
         EntityManager() = default;
 
-        static EntityManager& Get()
+        Entity CreateEntity()
         {
-            static EntityManager instance;
-            return instance;
+            return CreateEntity(Type::NONE);
         }
 
-        Entity CreateEntity()
+        Entity CreateEntity(Type _type)
         {
             Entity entity;
             if (m_currentEntity >= MAX_ENTITIES && m_availableEntities.empty())
             {
-                throw std::runtime_error("Maximum number of entities reached");
+                FROST_ERROR("Maximum entities reached!");
             }
 
             if (!m_availableEntities.empty())
@@ -41,7 +43,8 @@ namespace FrostEngine
 
             m_aliveEntities[entity] = true;
             m_entities[entity] = Signature();
-            std::cout << "Created entity with id: " << entity << std::endl;
+            m_entityType[entity] = _type;
+            FROST_LOG("Created Entity: %d with type %d", entity, m_entityType[entity]);
             return entity;
         }
 
@@ -49,20 +52,19 @@ namespace FrostEngine
         {
             if (_entity >= MAX_ENTITIES)
             {
-                std::cout << "Tried to delete invalid entity\n";
-                return;
+                FROST_ERROR("Tried to delete invalid entity");
             }
 
             if (m_aliveEntities[_entity])
             {
-                std::cout << "Deleting entity with id: " << _entity << std::endl;
                 m_aliveEntities[_entity] = false;
                 m_entities[_entity] = Signature();
                 m_availableEntities.push(_entity);
+                FROST_LOG("Deleted Entity with ID: %d", _entity);
             }
         }
 
-        void SetSignature(Entity _entity, const Signature& signature)
+        void SetSignature(Entity _entity, const Signature &signature)
         {
             if (_entity < MAX_ENTITIES && m_aliveEntities[_entity])
             {
@@ -70,7 +72,7 @@ namespace FrostEngine
                 return;
             }
 
-            throw std::runtime_error("Tried to set signature on invalid entity");
+            FROST_ERROR("Tried to set Signature to an invalid entity");
         }
 
         Signature GetSignature(Entity _entity) const
@@ -80,13 +82,19 @@ namespace FrostEngine
                 return m_entities[_entity];
             }
 
-            throw std::runtime_error("Tried to get signature from invalid entity");
+            FROST_ERROR("Tried to get a Signature from an invalid entity");
+        }
+
+        Type GetType(Entity _entity)
+        {
+            return m_entityType[_entity];
         }
 
     private:
         Entity m_currentEntity{};
         std::array<Signature, MAX_ENTITIES> m_entities{};
         std::array<bool, MAX_ENTITIES> m_aliveEntities{};
+        std::array<Type, MAX_ENTITIES> m_entityType{};
         std::queue<Entity> m_availableEntities{};
     };
 }
