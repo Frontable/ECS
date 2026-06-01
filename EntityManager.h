@@ -9,21 +9,10 @@ namespace FrostEngine
     class EntityManager
     {
     public:
-        enum class Type
-        {
-            NONE = 0,
-            PLAYER,
-            ENEMY,
-            WALL,
-        };
-        EntityManager() = default;
+        
+        EntityManager() = default;        
 
         Entity CreateEntity()
-        {
-            return CreateEntity(Type::NONE);
-        }
-
-        Entity CreateEntity(Type _type)
         {
             Entity entity;
             if (m_currentEntity >= MAX_ENTITIES && m_availableEntities.empty())
@@ -43,8 +32,6 @@ namespace FrostEngine
 
             m_aliveEntities[entity] = true;
             m_entities[entity] = Signature();
-            m_entityType[entity] = _type;
-            FROST_LOG("Created Entity: %d with type %d", entity, m_entityType[entity]);
             return entity;
         }
 
@@ -85,16 +72,12 @@ namespace FrostEngine
             FROST_ERROR("Tried to get a Signature from an invalid entity");
         }
 
-        Type GetType(Entity _entity)
-        {
-            return m_entityType[_entity];
-        }
+        
 
     private:
         Entity m_currentEntity{};
         std::array<Signature, MAX_ENTITIES> m_entities{};
         std::array<bool, MAX_ENTITIES> m_aliveEntities{};
-        std::array<Type, MAX_ENTITIES> m_entityType{};
         std::queue<Entity> m_availableEntities{};
     };
 }

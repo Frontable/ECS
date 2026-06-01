@@ -5,7 +5,6 @@
 #include "EntityManager.h"
 #include "Logger/Logger.h"
 
-using ComponentID = std::uint8_t;
 namespace FrostEngine
 {
     class IComponentArray

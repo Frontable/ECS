@@ -5,31 +5,36 @@
 #include "Components.h"
 #include "Logger/Logger.h"
 #include "SpriteBatchRenderer.h"
+#include <utility>
 
 namespace FrostEngine
 {
     class ECS
     {
     public:
-
-        
-        
-        static ECS& get()
+        ECS()
         {
-            static ECS ecs;
-            return ecs;
+            m_componentManager.RegisterComponent<Transform2D>();
+            m_componentManager.RegisterComponent<Velocity2D>();
+            m_componentManager.RegisterComponent<Sprite>();
+            m_componentManager.RegisterComponent<CircleCollider>();
+            m_componentManager.RegisterComponent<Lifetime>();
+            m_componentManager.RegisterComponent<PlayerTag>();
+            m_componentManager.RegisterComponent<AsteroidTag>();
+            m_componentManager.RegisterComponent<BulletTag>();
         }
+        ECS(const ECS&) = delete;
+        ECS& operator=(const ECS&) = delete;
         ~ECS() = default;
 
+        //---------------------
+        // Entity
+        //---------------------
         Entity CreateEntity()
         {
-            return m_entityManager.CreateEntity(FrostEngine::EntityManager::Type::NONE);
+            return m_entityManager.CreateEntity();
         }
 
-        Entity CreateEntity(FrostEngine::EntityManager::Type _type)
-        {
-            return m_entityManager.CreateEntity(_type);
-        }
 
         void DeleteEntity(Entity _entity)
         {
@@ -37,6 +42,9 @@ namespace FrostEngine
             m_entityManager.DeleteEntity(_entity);
         }
 
+        //---------------------
+        // Components
+        //---------------------
         template <typename T>
         void RegisterComponent()
         {
@@ -54,7 +62,7 @@ namespace FrostEngine
             m_entityManager.SetSignature(_entity, signature);
 
             m_systemManager.EntitySignatureChange(_entity, signature);
-            //FROST_LOG("aM I GETTING ERE");
+            // FROST_LOG("aM I GETTING ERE");
         }
 
         template <typename T>
@@ -70,24 +78,33 @@ namespace FrostEngine
         }
 
         template <typename T>
-        void RegisterSystem()
-        {
-            m_systemManager.RegisterSystem<T>();
-        }
-
-        template<typename T>
-        T& getSystem()
-        {
-            return m_systemManager.getSystem<T>();
-        }
-
-        template<typename T>
-        size_t GetComponentID()
+        ComponentID GetComponentID()
         {
             return m_componentManager.GetComponentID<T>();
         }
 
-        template<typename T>
+
+
+
+        //---------------------
+        // Systems
+        //---------------------
+
+        template <typename T, typename... Args>
+        void RegisterSystem(Args &&...args)
+        {
+            m_systemManager.RegisterSystem<T>(std::forward<Args>(args)...);
+        }
+
+        template <typename T>
+        T &getSystem()
+        {
+            return m_systemManager.getSystem<T>();
+        }
+
+        
+
+        template <typename T>
         void SetSystemSignature(Signature _signature)
         {
             m_systemManager.SetSignature<T>(_signature);
@@ -100,7 +117,7 @@ namespace FrostEngine
 
         struct EventMembers
         {
-            EventMembers(Entity _triggered, Entity _trigger):triggered(_triggered), trigger(_trigger){}
+            EventMembers(Entity _triggered, Entity _trigger) : triggered(_triggered), trigger(_trigger) {}
             Entity triggered;
             Entity trigger;
         };
@@ -111,39 +128,24 @@ namespace FrostEngine
         }
         void fortest()
         {
-            for(auto &pair : m_eventMembers)
+            for (auto &pair : m_eventMembers)
             {
                 auto &e1 = pair.triggered;
                 auto &e2 = pair.trigger;
-                //std::cout<<"Entity " << e1 << " collided with Entity" << e2 <<std::endl;
+                // std::cout<<"Entity " << e1 << " collided with Entity" << e2 <<std::endl;
             }
             m_eventMembers.clear();
         }
 
-        FrostEngine::EntityManager::Type GetType(Entity _entity)
-        {
-            return m_entityManager.GetType(_entity);
-        }
-
-        std::vector<EventMembers>& GetEvents()
+        std::vector<EventMembers> &GetEvents()
         {
             return m_eventMembers;
         }
 
-
-        
     private:
-        
-        ECS()
-        {
-            m_componentManager.RegisterComponent<Transform2D>();
-            m_componentManager.RegisterComponent<RigidBody2D>();
-            m_componentManager.RegisterComponent<Sprite>();
-            m_componentManager.RegisterComponent<BoxCollider>();
-        }
         EntityManager m_entityManager{};
         ComponentManager m_componentManager{};
-        SystemManager m_systemManager{};
+        SystemManager m_systemManager;
         std::vector<EventMembers> m_eventMembers;
     };
 }

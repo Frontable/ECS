@@ -7,27 +7,31 @@
 #include "Components.h"
 #include "EntityManager.h"
 #include "Logger/Logger.h"
-
-
+#include "Context.h"
 
 class ISystem
 {
 public:
+    ISystem(Context &_context) : m_context{_context} {}
     virtual ~ISystem() = default;
-    virtual void Update() = 0;
+    Context &m_context;
+    virtual void Update(float dt) = 0;
     std::vector<Entity> m_entities;
 };
 
 class SystemManager
 {
 public:
-    template <typename T>
-    void RegisterSystem()
+    template <typename T, typename... Args>
+    void RegisterSystem(Args &&...args)
     {
         auto index = typeid(T).hash_code();
+
         if (m_systems.find(index) == m_systems.end())
         {
-            m_systems.emplace(index, std::make_unique<T>());
+            // Passes 0 or more arguments to the constructor of T
+            m_systems.emplace(index, std::make_unique<T>(std::forward<Args>(args)...));
+
             m_systemSignature.emplace(index, Signature{});
             FROST_LOG("Registered system");
         }
@@ -48,23 +52,20 @@ public:
             if ((_signature & signature) == signature)
             {
                 auto it = std::find(system->m_entities.begin(), system->m_entities.end(), _entity);
-                if(it == system->m_entities.end())
+                if (it == system->m_entities.end())
                 {
                     system->m_entities.emplace_back(_entity);
                 }
-                
             }
             else
             {
                 auto it = std::find(system->m_entities.begin(), system->m_entities.end(), _entity);
-                if(it != system->m_entities.end())
+                if (it != system->m_entities.end())
                 {
-                    //system->m_entities.swap()
+                    // system->m_entities.swap()
                     std::iter_swap(it, system->m_entities.end() - 1);
                     system->m_entities.pop_back();
-
                 }
-                
             }
         }
     }
@@ -75,13 +76,12 @@ public:
         {
             auto &system = pair.second;
             auto it = std::find(system->m_entities.begin(), system->m_entities.end(), _entity);
-                if(it != system->m_entities.end())
-                {
-                    //system->m_entities.swap()
-                    std::iter_swap(it, system->m_entities.end() - 1);
-                    system->m_entities.pop_back();
-
-                }
+            if (it != system->m_entities.end())
+            {
+                // system->m_entities.swap()
+                std::iter_swap(it, system->m_entities.end() - 1);
+                system->m_entities.pop_back();
+            }
         }
     }
 
@@ -100,11 +100,11 @@ public:
         }
     }
 
-    template<typename T>
-    T& getSystem()
+    template <typename T>
+    T &getSystem()
     {
         auto index = typeid(T).hash_code();
-        return *static_cast<T*>(m_systems.at(index).get());
+        return *static_cast<T *>(m_systems.at(index).get());
     }
 
     std::unordered_map<size_t, std::unique_ptr<ISystem>> m_systems;
