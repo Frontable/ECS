@@ -72,7 +72,10 @@ namespace FrostEngine
             FROST_ERROR("Tried to get a Signature from an invalid entity");
         }
 
-        
+        bool IsAlive(Entity _entity) const
+        {
+            return _entity < MAX_ENTITIES && m_aliveEntities[_entity];
+        }        
 
     private:
         Entity m_currentEntity{};

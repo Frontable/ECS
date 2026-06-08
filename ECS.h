@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "EntityManager.h"
 #include "ComponentManager.h"
 #include "SystemManager.h"
@@ -12,17 +12,7 @@ namespace FrostEngine
     class ECS
     {
     public:
-        ECS()
-        {
-            m_componentManager.RegisterComponent<Transform2D>();
-            m_componentManager.RegisterComponent<Velocity2D>();
-            m_componentManager.RegisterComponent<Sprite>();
-            m_componentManager.RegisterComponent<CircleCollider>();
-            m_componentManager.RegisterComponent<Lifetime>();
-            m_componentManager.RegisterComponent<PlayerTag>();
-            m_componentManager.RegisterComponent<AsteroidTag>();
-            m_componentManager.RegisterComponent<BulletTag>();
-        }
+        ECS() = default;
         ECS(const ECS&) = delete;
         ECS& operator=(const ECS&) = delete;
         ~ECS() = default;
@@ -38,19 +28,21 @@ namespace FrostEngine
 
         void DeleteEntity(Entity _entity)
         {
-            m_componentManager.EntityDestroyed(_entity);
             m_entityManager.DeleteEntity(_entity);
+            m_componentManager.EntityDestroyed(_entity);
+            m_systemManager.EntityDestroyed(_entity);
         }
 
         //---------------------
         // Components
         //---------------------
-        template <typename T>
+
+        template<typename T>
         void RegisterComponent()
         {
             m_componentManager.RegisterComponent<T>();
         }
-
+        
         template <typename T>
         void AddComponent(Entity _entity, T _component)
         {
@@ -63,12 +55,20 @@ namespace FrostEngine
 
             m_systemManager.EntitySignatureChange(_entity, signature);
             // FROST_LOG("aM I GETTING ERE");
-        }
+        }      
 
         template <typename T>
-        void RemoveComponent(Entity _entity, T _component)
+        void RemoveComponent(Entity _entity)
         {
-            m_componentManager.RemoveComponent(_entity, _component);
+            m_componentManager.RemoveComponent<T>(_entity);
+
+            // ← these two lines are probably missing
+            ComponentID id = m_componentManager.GetComponentID<T>();
+            Signature signature = m_entityManager.GetSignature(_entity);
+            signature.reset(id);  // clear the bit
+            m_entityManager.SetSignature(_entity, signature);
+
+            m_systemManager.EntitySignatureChange(_entity, signature);
         }
 
         template <typename T>
@@ -83,7 +83,11 @@ namespace FrostEngine
             return m_componentManager.GetComponentID<T>();
         }
 
-
+        template <typename T>
+        bool HasComponent(Entity _entity)
+        {
+            return m_componentManager.HasComponent<T>(_entity);
+        }
 
 
         //---------------------
@@ -140,6 +144,20 @@ namespace FrostEngine
         std::vector<EventMembers> &GetEvents()
         {
             return m_eventMembers;
+        }
+
+        void Reset()
+        {
+            // Destroy all alive entities
+            for (Entity e = 0; e < MAX_ENTITIES; e++)
+            {
+                if (m_entityManager.IsAlive(e))
+                {
+                    m_componentManager.EntityDestroyed(e);
+                    m_systemManager.EntityDestroyed(e);
+                    m_entityManager.DeleteEntity(e);
+                }
+            }
         }
 
     private:

@@ -38,12 +38,21 @@ namespace FrostEngine
 
         void EntityDestroyed(Entity _entity) override
         {
-            RemoveComponent(_entity);
+            // Use find to check existence without triggering your FROST_ERROR
+            if (m_Components.find(_entity) != m_Components.end())
+            {
+                m_Components.erase(_entity);
+            }
         }
 
         void SetComponent(Entity _entity, const T &_component)
         {
             m_Components[_entity] = _component;
+        }
+
+        bool HasComponent(Entity _entity)
+        {
+            return m_Components.find(_entity) != m_Components.end();
         }
 
         T &GetComponent(Entity _entity)
@@ -87,11 +96,17 @@ namespace FrostEngine
 
         void EntityDestroyed(Entity _entity)
         {
-            for (auto &map : m_componentArrays)
+            for (auto& map : m_componentArrays)
             {
-                auto &component = map.second;
+                auto& component = map.second;
                 component->EntityDestroyed(_entity);
             }
+        }
+
+        template <typename T>
+        bool HasComponent(Entity _entity)
+        {
+            return GetComponentArray<T>().HasComponent(_entity);
         }
 
         template <typename T>
