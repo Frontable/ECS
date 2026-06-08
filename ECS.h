@@ -4,7 +4,7 @@
 #include "SystemManager.h"
 #include "Components.h"
 #include "Logger/Logger.h"
-#include "SpriteBatchRenderer.h"
+#include "Rendering/Core/SpriteBatchRenderer.h"
 #include <utility>
 
 namespace FrostEngine

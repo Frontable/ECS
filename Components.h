@@ -1,5 +1,5 @@
 #pragma once
-#include "FrostMath.h"
+#include "Math/FrostMath.h"
 #include "Rendering/Essentials/Texture.h"
 
 struct Transform2D

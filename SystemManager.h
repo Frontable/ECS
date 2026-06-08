@@ -7,7 +7,7 @@
 #include "Components.h"
 #include "EntityManager.h"
 #include "Logger/Logger.h"
-#include "Context.h"
+#include "Platform/Context.h"
 
 class ISystem
 {
